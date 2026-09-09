@@ -27,7 +27,7 @@ jobs:
         name: Install pnpm
         id: pnpm-install
         with:
-          version: 10
+          version: 9  # ✅ 强制降低到稳定的 pnpm v9，彻底绕过 pnpm v10 的所有限制
           run_install: false
 
       - name: Deploy Backend for ${{ github.ref_name }}
@@ -37,7 +37,7 @@ jobs:
           
           if [ -n "$use_worker_assets" ]; then
             cd frontend/
-            pnpm install --no-frozen-lockfile --config.only-built-dependencies=esbuild,workerd,core-js-pure
+            pnpm install --no-frozen-lockfile
             if [ -n "$use_worker_assets_with_telegram" ]; then
               echo "Building with telegram pages"
               pnpm build:telegram:pages
@@ -55,7 +55,7 @@ jobs:
           # ✅ 修复核心：使用环境变量写入，避免 Shell 解析特殊字符
           printf '%s\n' "$WRANGLER_TOML_CONTENT" > wrangler.toml
           
-          pnpm install --no-frozen-lockfile --config.only-built-dependencies=esbuild,workerd,core-js-pure
+          pnpm install --no-frozen-lockfile
 
           if [ -n "$use_mail_wasm_parser" ]; then
             echo "Using mail-parser-wasm-worker"
@@ -64,17 +64,9 @@ jobs:
             echo "Applied mail-parser-wasm-worker patch"
           fi
 
-          if [ "$debug_mode" = "true" ]; then
-            pnpm run deploy
-          else
-            if pnpm run deploy >/dev/null 2>&1; then
-              echo "Deploy succeeded"
-            else
-              code=$?
-              echo "Command failed with exit code $code"
-              exit "$code"
-            fi
-          fi
+          # ✅ 无论是不是 debug 模式，都打印出完整日志，以便看清是 cloudflare 的什么凭证出错了
+          pnpm run deploy
+          
           echo "Deployed for tag ${{ github.ref_name }}"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
