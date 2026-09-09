@@ -9,4 +9,4 @@ environment = "production"
 [[d1_databases]]
 binding = "DB"
 database_name = "temp-email-db"
-database_id = "02d212e4-4339-45cd-8618-c008b9b1a6a8"
+database_id = "3393d24e-5d99-44fb-857c-8a1d3d7f92d3"
