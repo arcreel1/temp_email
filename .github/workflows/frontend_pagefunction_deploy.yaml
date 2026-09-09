@@ -1,60 +1,14 @@
-name: Deploy Frontend with page function
+#:schema node_modules/wrangler/config-schema.json
+name = "cloudflare-temp-email"
+compatibility_date = "2024-04-03"
+compatibility_flags = [ "nodejs_compat" ]
+pages_build_output_dir = "../frontend/dist"
 
-on:
-  workflow_run:
-    workflows: [Upstream Sync]
-    types: [completed]
-  push:
-    tags:
-      - "*"
-  workflow_dispatch:
+[vars]
+# 可以在这里填入你的主页密码，用逗号隔开，不加就不锁主页
+# PASSWORDS = ""
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    outputs:
-      has_config: ${{ steps.check.outputs.has_config }}
-    steps:
-      - name: Check PAGE_TOML
-        id: check
-        run: |
-          if [ -n "$PAGE_TOML" ]; then
-            echo "has_config=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_config=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          PAGE_TOML: ${{ secrets.PAGE_TOML }}
-
-  deploy:
-    needs: check
-    if: ${{ needs.check.outputs.has_config == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Install Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
-      - uses: pnpm/action-setup@v5
-        name: Install pnpm
-        with:
-          version: 10
-          run_install: false
-
-      - name: Deploy Frontend for ${{ github.ref_name }}
-        run: |
-          cd frontend/
-          pnpm install --no-frozen-lockfile
-          pnpm build:pages
-          cd ../pages/
-          echo '${{ secrets.PAGE_TOML }}' > wrangler.toml
-          pnpm install --no-frozen-lockfile
-          pnpm run deploy
-          echo "Deploying production for ${{ github.ref_name }}"
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+[[d1_databases]]
+binding = "DB"
+database_name = "vmail"
+database_id = "vmail"
